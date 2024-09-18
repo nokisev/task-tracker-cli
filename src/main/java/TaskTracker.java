@@ -73,6 +73,12 @@ public class TaskTracker {
 
     }
 
+/*
+ * 
+ * GET
+ * 
+ */
+
     // show all tasks
     private static void showAll() throws IOException {
         for (TaskList task : TaskTracker.list)
@@ -88,6 +94,11 @@ public class TaskTracker {
         }
     }
 
+/*
+ * 
+ * DELETE
+ * 
+ */
 
     // delete task
     private static void deleteTask(int id) throws IOException {
@@ -95,7 +106,14 @@ public class TaskTracker {
 
         // SAVE JSON
         saveJson();
+        TaskTracker.id--;
     }
+
+/*
+ * 
+ * UPDATE
+ * 
+ */
 
     private static void updateTask(int id, String descOrStatus) throws IOException {
         TaskList task = list.get(id - 1);
@@ -111,6 +129,12 @@ public class TaskTracker {
         // SAVE JSON
         saveJson();
     }
+
+/*
+ * 
+ * POST
+ * 
+ */
 
     // create new task
     private static void createTask(String description, String status) throws IOException {
