@@ -10,6 +10,8 @@ https://roadmap.sh/projects/task-tracker
 - [ ] Adding a new task
     - [ ] Add normal auto-generation of the task id
 - [ ] Marking a task as in progress or done
+- [ ] Add variables for LocalTime in TaskList (createdAt, updatedAt)
+    - [ ] Update methods
 
 ### In Progress
 
