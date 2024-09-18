@@ -12,15 +12,18 @@ import java.util.*;
 
 public class TaskTracker {
 
-    private static int id = 1;
+    private static int id;
 
     private static File file = new File("src/main/resources/log.json");
     private static ObjectMapper mapper = new ObjectMapper();
     private static ArrayList<TaskList> list;
 
+    
+
     static {
         try {
             list = mapper.readValue(file, mapper.getTypeFactory().constructCollectionType(List.class, TaskList.class));
+            id = list.size();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -37,10 +40,12 @@ public class TaskTracker {
             String command = console.nextLine();
             String[] slice = command.split(" ");
             if (slice[0].equals("create")) {
-                createTask(slice[1], slice[2]);
-                break;
+                String update = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
+                createTask(update, slice[2]);
             }
-
+            else if (command.startsWith("mark")) {
+                markTask(command, Integer.parseInt(slice[1]));
+            }
             /*
              * list - all  tasks
              * 
@@ -52,27 +57,23 @@ public class TaskTracker {
              * list in-progress
              * 
              */
-            if (slice[0].equals("list")) {
+            else if (slice[0].equals("list")) {
                 if (slice.length > 1) {
                     showByStatus(slice[1]);
-                    break;
                 } else {
                     showAll();
-                    break;
                 }
-            }
-            if (slice[0].equals("update")) {
+            } else if (slice[0].equals("update")) {
                 String update = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
                 updateTask(Integer.parseInt(slice[1]), update);
-                break;
-            }
-            if (slice[0].equals("delete")) {
+            } else if (slice[0].equals("delete")) {
                 deleteTask(Integer.parseInt(slice[1]));
+            } else if (command.equals("exit")) {
                 break;
             }
         }
 
-
+        System.out.println("exit cli");
     }
 
 /*
@@ -83,8 +84,10 @@ public class TaskTracker {
 
     // show all tasks
     private static void showAll() throws IOException {
-        for (TaskList task : TaskTracker.list)
+        for (TaskList task : TaskTracker.list){
             System.out.println(task.toString());
+        }
+            
     }
 
     // show tasks by status
@@ -127,6 +130,21 @@ public class TaskTracker {
         saveJson();
     }
 
+    private static void markTask(String command, int id) throws StreamWriteException, DatabindException, IOException {
+        TaskList task = list.get(id - 1);
+        if (command.contains("in-progress")) {
+            task.setStatus("in-progress");
+        }
+        else if (command.contains("done")) {
+            task.setStatus("done");
+        } else {
+            task.setStatus("todo");
+        }
+        list.set(task.getId() - 1, task);
+
+        saveJson();
+    }
+
 /*
  * 
  * POST
@@ -138,7 +156,7 @@ public class TaskTracker {
         TaskList task = new TaskList();
         task.setDescription(description);
         task.setStatus(status);
-        task.setId(TaskTracker.id++);
+        task.setId(TaskTracker.id + 1);
         list.add(task);
         
         // SAVE JSON
@@ -155,7 +173,7 @@ public class TaskTracker {
     static class TaskList {
         int id;
         String description;
-        String status;
+        String status = "todo";
 //        DateFormat createdAt;
 //        DateFormat updatedAt;
 
