@@ -1,4 +1,5 @@
-package PACKAGE_NAME;
-
 public enum Status {
+
+    TODO, IN_PROGRESS, DONE
+
 }
