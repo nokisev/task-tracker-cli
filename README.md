@@ -14,7 +14,7 @@ https://roadmap.sh/projects/task-tracker
 ### In Progress
 
 - [ ] Updating and deleting tasks
-    - [ ] Remove the status change in the updateTask() method, make the reading of a sentence, not a single word.
+    - [x] Remove the status change in the updateTask() method, make the reading of a sentence, not a single word.
 
 ### Done ✓
 

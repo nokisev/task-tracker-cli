@@ -33,8 +33,9 @@ public class TaskTracker {
         System.out.println("test cli");
 
         while (true) {
-            Scanner command = new Scanner(System.in);
-            String[] slice = (command.nextLine()).split(" ");
+            Scanner console = new Scanner(System.in);
+            String command = console.nextLine();
+            String[] slice = command.split(" ");
             if (slice[0].equals("create")) {
                 createTask(slice[1], slice[2]);
                 break;
@@ -61,7 +62,8 @@ public class TaskTracker {
                 }
             }
             if (slice[0].equals("update")) {
-                updateTask(Integer.parseInt(slice[1]), slice[2]);
+                String update = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
+                updateTask(Integer.parseInt(slice[1]), update);
                 break;
             }
             if (slice[0].equals("delete")) {
@@ -115,16 +117,11 @@ public class TaskTracker {
  * 
  */
 
-    private static void updateTask(int id, String descOrStatus) throws IOException {
+    private static void updateTask(int id, String desc) throws IOException {
         TaskList task = list.get(id - 1);
         
-        if (descOrStatus.equalsIgnoreCase("TODO") || descOrStatus.equalsIgnoreCase("in-progress") || descOrStatus.equalsIgnoreCase("done")) {
-            task.setStatus(descOrStatus);
-            list.set(task.getId() - 1, task);
-        } else {
-            task.setDescription(descOrStatus);
-            list.set(task.getId() - 1, task);
-        }
+        task.setDescription(desc);
+        list.set(task.getId() - 1, task);
 
         // SAVE JSON
         saveJson();
