@@ -7,9 +7,6 @@ https://roadmap.sh/projects/task-tracker
 
 ### ToDO
 
-- [ ] Add variables for LocalTime in TaskList (createdAt, updatedAt)
-    - [ ] Update methods
-
 ### In Progress
 
 

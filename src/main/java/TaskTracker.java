@@ -1,33 +1,44 @@
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamWriteException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+import java.text.DateFormat;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.*;
 
 public class TaskTracker {
 
-    private static int id;
+    
 
     private static File file = new File("src/main/resources/log.json");
     private static ObjectMapper mapper = new ObjectMapper();
-    private static ArrayList<TaskList> list;
-
-    
+    private static ArrayList<Task> list;
 
     static {
         try {
-            list = mapper.readValue(file, mapper.getTypeFactory().constructCollectionType(List.class, TaskList.class));
-            id = list.size();
+            mapper.registerModule(new JavaTimeModule());
+            mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            DateFormat dateFormat = DateFormat.getInstance();
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // optional
+            mapper.setDateFormat(dateFormat);
+            list = mapper.readValue(file, mapper.getTypeFactory().constructCollectionType(List.class, Task.class));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+    private static int id = list.size();
 
     public TaskTracker() throws IOException {
     }
@@ -39,15 +50,14 @@ public class TaskTracker {
             Scanner console = new Scanner(System.in);
             String command = console.nextLine();
             String[] slice = command.split(" ");
-            if (slice[0].equals("create")) {
-                String update = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
-                createTask(update, slice[2]);
-            }
-            else if (command.startsWith("mark")) {
+            if (command.startsWith("create")) {
+                String description = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
+                createTask(description);
+            } else if (command.startsWith("mark")) {
                 markTask(command, Integer.parseInt(slice[1]));
             }
             /*
-             * list - all  tasks
+             * list - all tasks
              * 
              * 
              * tasks by status
@@ -76,54 +86,54 @@ public class TaskTracker {
         System.out.println("exit cli");
     }
 
-/*
- * 
- * GET
- * 
- */
+    /*
+     * 
+     * GET
+     * 
+     */
 
     // show all tasks
     private static void showAll() throws IOException {
-        for (TaskList task : TaskTracker.list){
+        for (Task task : TaskTracker.list) {
             System.out.println(task.toString());
         }
-            
+
     }
 
     // show tasks by status
     private static void showByStatus(String status) {
-        for (TaskList task : TaskTracker.list){
+        for (Task task : TaskTracker.list) {
             if ((task.getStatus()).equalsIgnoreCase(status)) {
                 System.out.println(task.toString());
             }
         }
     }
 
-/*
- * 
- * DELETE
- * 
- */
+    /*
+     * 
+     * DELETE
+     * 
+     */
 
     // delete task
     private static void deleteTask(int id) throws IOException {
         list.remove(id - 1);
-
         // SAVE JSON
         saveJson();
-        TaskTracker.id--;
+        TaskTracker.id -= 1;
     }
 
-/*
- * 
- * UPDATE
- * 
- */
+    /*
+     * 
+     * UPDATE
+     * 
+     */
 
     private static void updateTask(int id, String desc) throws IOException {
-        TaskList task = list.get(id - 1);
-        
+        Task task = list.get(id - 1);
+
         task.setDescription(desc);
+        task.setUpdatedAt();
         list.set(task.getId() - 1, task);
 
         // SAVE JSON
@@ -131,34 +141,34 @@ public class TaskTracker {
     }
 
     private static void markTask(String command, int id) throws StreamWriteException, DatabindException, IOException {
-        TaskList task = list.get(id - 1);
+        Task task = list.get(id - 1);
         if (command.contains("in-progress")) {
             task.setStatus("in-progress");
-        }
-        else if (command.contains("done")) {
+        } else if (command.contains("done")) {
             task.setStatus("done");
         } else {
             task.setStatus("todo");
         }
+        task.setUpdatedAt();
         list.set(task.getId() - 1, task);
 
         saveJson();
     }
 
-/*
- * 
- * POST
- * 
- */
+    /*
+     * 
+     * POST
+     * 
+     */
 
     // create new task
-    private static void createTask(String description, String status) throws IOException {
-        TaskList task = new TaskList();
+    private static void createTask(String description) throws IOException {
+        Task task = new Task();
         task.setDescription(description);
-        task.setStatus(status);
-        task.setId(TaskTracker.id + 1);
+        TaskTracker.id++;
+        task.setId(TaskTracker.id);
         list.add(task);
-        
+
         // SAVE JSON
         saveJson();
     }
@@ -170,19 +180,41 @@ public class TaskTracker {
         System.out.println("JSON обновлён!");
     }
 
-    static class TaskList {
-        int id;
-        String description;
-        String status = "todo";
-//        DateFormat createdAt;
-//        DateFormat updatedAt;
+    static class Task {
+        private int id;
+        private String description;
+        private String status = "todo";
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = 
+        "yyyy-MM-dd'T'HH:mm:ss")
+        private LocalDateTime createdAt;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = 
+        "yyyy-MM-dd'T'HH:mm:ss")
+        private LocalDateTime updatedAt;
 
+        public Task() {
+            this.createdAt = LocalDateTime.now();
+            this.updatedAt = LocalDateTime.now();
+        }
 
         @Override
         public String toString() {
-            return  "id=" + id +
-                    ", description='" + description + '\'' +
-                    ", status='" + status;
+            return "id: " + id + 
+            "description: " + description + 
+            "status: " + status +
+            "createdAt: " + createdAt +
+            "updatedAt: " + updatedAt;
+        }
+
+        public LocalDateTime getCreatedAt() {
+            return createdAt;
+        }
+
+        public LocalDateTime getUpdatedAt() {
+            return updatedAt;
+        }
+
+        public void setUpdatedAt() {
+            this.updatedAt = LocalDateTime.now();
         }
 
         public int getId() {
@@ -192,22 +224,6 @@ public class TaskTracker {
         public void setId(int id) {
             this.id = id;
         }
-
-//        public DateFormat getCreatedAt() {
-//            return createdAt;
-//        }
-//
-//        public void setCreatedAt(DateFormat createdAt) {
-//            this.createdAt = createdAt;
-//        }
-//
-//        public DateFormat getUpdatedAt() {
-//            return updatedAt;
-//        }
-//
-//        public void setUpdatedAt(DateFormat updatedAt) {
-//            this.updatedAt = updatedAt;
-//        }
 
         public String getDescription() {
             return description;
