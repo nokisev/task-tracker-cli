@@ -1,5 +1,7 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamWriteException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -10,11 +12,11 @@ import java.util.*;
 
 public class TaskTracker {
 
-    private static int id = 3;
+    private static int id = 1;
 
     private static File file = new File("src/main/resources/log.json");
     private static ObjectMapper mapper = new ObjectMapper();
-    private static List<TaskList> list;
+    private static ArrayList<TaskList> list;
 
     static {
         try {
@@ -35,12 +37,19 @@ public class TaskTracker {
             String[] slice = (command.nextLine()).split(" ");
             if (slice[0].equals("create")) {
                 createTask(slice[1], slice[2]);
+                break;
             }
             if (slice[0].equals("list")) {
                 showAll();
+                break;
             }
             if (slice[0].equals("update")) {
                 updateTask(Integer.parseInt(slice[1]), slice[2]);
+                break;
+            }
+            if (slice[0].equals("delete")) {
+                deleteTask(Integer.parseInt(slice[1]));
+                break;
             }
         }
 
@@ -48,15 +57,15 @@ public class TaskTracker {
     }
 
     // TODO: status
-    private static void showDone () {
-
+    private static void showDone() {
+        
     }
 
-    private static void showInProgress () {
-
+    private static void showInProgress() {
+        
     }
 
-    private static void showTodo () {
+    private static void showTodo() {
 
     }
 
@@ -66,12 +75,30 @@ public class TaskTracker {
             System.out.println(task.toString());
     }
 
-    private static void deleteTask(int id) {
 
+    // delete task
+    private static void deleteTask(int id) throws IOException {
+        list.remove(id - 1);
+
+        // SAVE JSON
+        saveJson();
     }
 
-    private static void updateTask(int id, String des) {
+    private static void updateTask(int id, String descOrStatus) throws IOException {
+        TaskList task = list.get(id - 1);
         
+        if (descOrStatus.equalsIgnoreCase("TODO") || descOrStatus.equalsIgnoreCase("in-progress") || descOrStatus.equalsIgnoreCase("done")) {
+            task.setStatus(descOrStatus);
+            list.set(task.getId() - 1, task);
+
+        } else {
+            task.setDescription(descOrStatus);
+            list.set(task.getId() - 1, task);
+
+        }
+
+        // SAVE JSON
+        saveJson();
     }
 
     // create new task
@@ -81,6 +108,12 @@ public class TaskTracker {
         task.setStatus(status);
         task.setId(TaskTracker.id++);
         list.add(task);
+        
+        // SAVE JSON
+        saveJson();
+    }
+
+    private static void saveJson() throws StreamWriteException, DatabindException, IOException {
         FileWriter fileWriter = new FileWriter(file);
         mapper.writeValue(fileWriter, list);
         fileWriter.close();
