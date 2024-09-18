@@ -39,9 +39,26 @@ public class TaskTracker {
                 createTask(slice[1], slice[2]);
                 break;
             }
+
+            /*
+             * list - all  tasks
+             * 
+             * 
+             * tasks by status
+             * 
+             * list done
+             * list todo
+             * list in-progress
+             * 
+             */
             if (slice[0].equals("list")) {
-                showAll();
-                break;
+                if (slice.length > 1) {
+                    showByStatus(slice[1]);
+                    break;
+                } else {
+                    showAll();
+                    break;
+                }
             }
             if (slice[0].equals("update")) {
                 updateTask(Integer.parseInt(slice[1]), slice[2]);
@@ -56,23 +73,19 @@ public class TaskTracker {
 
     }
 
-    // TODO: status
-    private static void showDone() {
-        
-    }
-
-    private static void showInProgress() {
-        
-    }
-
-    private static void showTodo() {
-
-    }
-
     // show all tasks
     private static void showAll() throws IOException {
         for (TaskList task : TaskTracker.list)
             System.out.println(task.toString());
+    }
+
+    // show tasks by status
+    private static void showByStatus(String status) {
+        for (TaskList task : TaskTracker.list){
+            if ((task.getStatus()).equalsIgnoreCase(status)) {
+                System.out.println(task.toString());
+            }
+        }
     }
 
 
@@ -90,11 +103,9 @@ public class TaskTracker {
         if (descOrStatus.equalsIgnoreCase("TODO") || descOrStatus.equalsIgnoreCase("in-progress") || descOrStatus.equalsIgnoreCase("done")) {
             task.setStatus(descOrStatus);
             list.set(task.getId() - 1, task);
-
         } else {
             task.setDescription(descOrStatus);
             list.set(task.getId() - 1, task);
-
         }
 
         // SAVE JSON
@@ -175,8 +186,5 @@ public class TaskTracker {
             this.status = status;
         }
     }
-
-
-
 
 }
