@@ -46,45 +46,60 @@ public class TaskTracker {
     public static void main(String[] args) throws IOException {
         System.out.println("test cli");
 
-        while (true) {
-            Scanner console = new Scanner(System.in);
-            String command = console.nextLine();
-            String[] slice = command.split(" ");
-            if (command.startsWith("create")) {
-                String description = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
-                createTask(description);
-            } else if (command.startsWith("mark")) {
-                markTask(command, Integer.parseInt(slice[1]));
-            }
-            /*
-             * list - all tasks
-             * 
-             * 
-             * tasks by status
-             * 
-             * list done
-             * list todo
-             * list in-progress
-             * 
-             */
-            else if (slice[0].equals("list")) {
-                if (slice.length > 1) {
-                    showByStatus(slice[1]);
-                } else {
-                    showAll();
+        String command = "";
+        int word = 0;
+        while (word < args.length) {
+            Scanner sc = new Scanner(args[word]);
+            if (args[0].equals("create")) {
+                command += args[word] + " \"";
+            } else if (args[0].equals("update")) {
+                command += args[word] + " ";
+                if (sc.hasNextInt()) { // следующее целое?
+                    command += args[word + 1] + " ";
+                    for (int i = word + 1; i < args.length; i++) { // update 1 "fdasfkasfha akf kasdhf"
+                                                                   // |________|
+                        if (i == word + 1) {
+                            command += "\""; // update 1 "fdasfkasfha akf kasdhf"
+                                             // |_________|
+                            continue;
+                        }
+
+                        // TODO доделать!!!
+                        
+                    }
                 }
-            } else if (slice[0].equals("update")) {
-                String update = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
-                updateTask(Integer.parseInt(slice[1]), update);
-            } else if (slice[0].equals("delete")) {
-                deleteTask(Integer.parseInt(slice[1]));
-            } else if (command.equals("exit")) {
-                break;
+            } 
+            else {
+                command += args[word] + " ";
             }
+            
+            word++;
         }
 
-        System.out.println("exit cli");
+        System.out.println(command);
+
+        String[] slice = command.split(" ");
+        
+        if (command.startsWith("create")) {
+            String description = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
+            createTask(description);
+        } else if (command.startsWith("mark")) {
+            markTask(command, Integer.parseInt(slice[1]));
+        }
+        else if (slice[0].equals("list")) {
+            if (slice.length > 1) {
+                showByStatus(slice[1]);
+            } else {
+                showAll();
+            }
+        } else if (slice[0].equals("update")) {
+            String update = command.substring(command.indexOf("\"") + 1, command.lastIndexOf("\""));
+            updateTask(Integer.parseInt(slice[1]), update);
+        } else if (slice[0].equals("delete")) {
+            deleteTask(Integer.parseInt(slice[1]));
+        }
     }
+        
 
     /*
      * 
